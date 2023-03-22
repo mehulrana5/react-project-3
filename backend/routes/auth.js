@@ -13,7 +13,6 @@ const JWT_SECRET = "hehe343%%324^2";
 // Require the Express-validator middleware to validate request body parameters
 const { body, validationResult } = require('express-validator');
 
-
 //create user route
 router.post('/createuser', [
     // Validate email, name, and password fields using Express-validator
@@ -27,6 +26,7 @@ router.post('/createuser', [
         return res.status(400).json({ errors: errors.array() });
     }
     try {
+        let success=false;
         // Check if user with given email already exists
         let user = await User.findOne({ email: req.body.email });
         if (user) {
@@ -55,7 +55,9 @@ router.post('/createuser', [
         // console.log(jwtToken);
 
         // Send a success response with the user object and JWT token
+        success=true;
         res.json({
+            success,
             jwtToken
         });
     } catch (error) {
@@ -76,13 +78,14 @@ router.post('/login', [
     }
     const {email,password}=req.body
     try {
+        let success=false;
         const user =await User.findOne({email});
-        if(!user){
-            return res.status(400).json({error:"invalid cred"})
+        if(!user){ 
+            return res.status(400).json({success,error:"invalid cred"})
         }
         const passwordCompare=await bcrypt.compare(password,user.password)
         if(!passwordCompare){
-            return res.status(400).json({error:"invalid cred"})
+            return res.status(400).json({success,error:"invalid cred"})
         }
         const data = {
             user: {
@@ -93,9 +96,8 @@ router.post('/login', [
         
         // Log the JWT token to the console (for debugging purposes)
         console.log(jwtToken);
-        res.json({
-            jwtToken
-        });
+        success=true;
+        res.json({success,jwtToken});
     } catch (error) {
         console.log(error.message);
         res.status(500).send("some error occurred");
